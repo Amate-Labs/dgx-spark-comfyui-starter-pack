@@ -4,17 +4,29 @@
     update_cache: true
     cache_valid_time: 3600
 
+- name: Install needrestart to manage services affected by package upgrades
+  ansible.builtin.apt:
+    name: needrestart
+    state: present
+  environment:
+    NEEDRESTART_MODE: "{{ 'a' if dgx_spark_update_restart_services else 'l' }}"
+  when: dgx_spark_update_restart_services
+
 - name: Upgrade installed APT packages
   ansible.builtin.apt:
     upgrade: "{{ dgx_spark_update_upgrade_type }}"
     autoremove: "{{ dgx_spark_update_autoremove }}"
     autoclean: true
   register: dgx_spark_update_apt
+  environment:
+    NEEDRESTART_MODE: "{{ 'a' if dgx_spark_update_restart_services else 'l' }}"
 
 - name: Install fwupd when firmware updates are enabled
   ansible.builtin.apt:
     name: fwupd
     state: present
+  environment:
+    NEEDRESTART_MODE: "{{ 'a' if dgx_spark_update_restart_services else 'l' }}"
   when: dgx_spark_update_firmware
 
 - name: Check for firmware upgrades

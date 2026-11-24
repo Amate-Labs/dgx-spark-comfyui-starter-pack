@@ -7,7 +7,7 @@ Two Ansible roles configure a DGX Spark. An Agent Skill guides ComfyUI setup and
 ## Contents
 
 - `roles/nvidia_gpu_clock_limit`: run `nvidia-smi -lgc 0,2200` once at boot through systemd.
-- `roles/dgx_spark_update`: upgrade APT packages and install firmware offered by fwupd.
+- `roles/dgx_spark_update`: upgrade APT packages, restart affected services through `needrestart`, and install firmware offered by fwupd.
 - `skills/comfyui-dgx-spark`: guide the ComfyUI install, repository refresh, and verification workflow.
 - `constraints.txt`: pin the Spark PyTorch stack for ComfyUI package installs.
 
@@ -44,7 +44,7 @@ cp inventory.ini.example inventory.ini
 ansible-playbook -i inventory.ini playbooks/dgx-spark.yml --become --ask-become-pass
 ```
 
-Include either role in another playbook to run it on its own. The update role can restart services or require a reboot. Set `dgx_spark_update_reboot: true` to let Ansible reboot after changes.
+Include either role in another playbook to run it on its own. The update role restarts services flagged by `needrestart`. Set `dgx_spark_update_reboot: true` to let Ansible reboot after package or firmware changes.
 
 ## Check GPU clock logs
 
