@@ -29,11 +29,26 @@
     NEEDRESTART_MODE: "{{ 'a' if dgx_spark_update_restart_services else 'l' }}"
   when: dgx_spark_update_firmware
 
+- name: Refresh firmware metadata
+  ansible.builtin.command:
+    argv: [fwupdmgr, refresh]
+  register: dgx_spark_update_firmware_refresh
+  changed_when: false
+  failed_when: >-
+    dgx_spark_update_firmware_refresh.rc != 0 and
+    'Metadata is up to date' not in
+    (dgx_spark_update_firmware_refresh.stdout | default('') ~ '\n' ~ dgx_spark_update_firmware_refresh.stderr | default(''))
+  when: dgx_spark_update_firmware
+
 - name: Check for firmware upgrades
   ansible.builtin.command:
     argv: [fwupdmgr, get-upgrades]
   register: dgx_spark_update_firmware_check
   changed_when: false
+  failed_when: >-
+    dgx_spark_update_firmware_check.rc != 0 and
+    'No updates available' not in
+    (dgx_spark_update_firmware_check.stdout | default('') ~ '\n' ~ dgx_spark_update_firmware_check.stderr | default(''))
   when: dgx_spark_update_firmware
 
 - name: Show firmware upgrade inventory
@@ -46,7 +61,9 @@
     argv: [fwupdmgr, update, --assume-yes]
   register: dgx_spark_update_firmware_apply
   changed_when: "'No upgrades' not in (dgx_spark_update_firmware_apply.stdout | default(''))"
-  when: dgx_spark_update_firmware
+  when:
+    - dgx_spark_update_firmware
+    - "'No updates available' not in (dgx_spark_update_firmware_check.stdout | default('') ~ '\n' ~ dgx_spark_update_firmware_check.stderr | default(''))"
 
 - name: Reboot after updates when explicitly requested
   ansible.builtin.reboot:
