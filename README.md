@@ -15,7 +15,15 @@ The firmware role reports pending upgrades and installs them with `fwupdmgr`. Th
 
 ## Ansible use
 
-Requires Ansible on the controller and an Ubuntu DGX Spark reachable over SSH. Example inventory:
+Requires Python 3.12+ and an Ubuntu DGX Spark reachable over SSH. The controller requirements install `ansible-core`; these roles use only `ansible.builtin` modules, so no additional Galaxy collections are needed. Set up an isolated controller environment:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+Example inventory:
 
 ```ini
 [dgx_spark]

@@ -1,0 +1,2 @@
+# The roles only use ansible.builtin modules; no extra Galaxy collections are needed.
+ansible-core>=2.21,<2.23
