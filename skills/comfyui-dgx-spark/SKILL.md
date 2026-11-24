@@ -19,27 +19,31 @@ Use these defaults for this workstation:
 - `VENV=$HOME/.venv-comfy`
 - `COMFY=$HOME/playground/ComfyUI`
 - `COMFYUI_DGX_SPARK_ROOT=$HOME/playground/comfyui-dgx-spark`
-- Constraints file: `../../constraints.txt` relative to this skill directory, or the matching `constraints.txt` in the starter pack repository.
+- `DGX_SPARK_STARTER_PACK_ROOT=$HOME/playground/dgx-spark-comfyui-starter-pack`
+- Constraints file: `$DGX_SPARK_STARTER_PACK_ROOT/constraints.txt`.
 
-Honor explicit user values for `VENV`, `COMFY`, and `COMFYUI_DGX_SPARK_ROOT`. Export `VENV` and `COMFY` for every command executed from `comfyui-dgx-spark`; its scripts consume those environment variables. Expand `~` to the target user's home directory before passing paths to tools.
+Honor explicit user values for `VENV`, `COMFY`, `COMFYUI_DGX_SPARK_ROOT`, and `DGX_SPARK_STARTER_PACK_ROOT`. Export `VENV` and `COMFY` for every command executed from `comfyui-dgx-spark`; its scripts consume those environment variables. Expand `~` to the target user's home directory before passing paths to tools.
 
 Confirm the target is a DGX Spark/GB10 and the checkout and venv paths are the intended ones. Verify `$VENV/bin/python` exists and can import torch, report its version, CUDA version, device name, and compute capability. The installer expects a Spark compatible PyTorch build (the local tested stack documents 2.11+ cu130; the checked-in constraints currently pin 2.13.0+cu130).
 
 ## Preserve work and refresh repositories
 
-1. Inspect `git status --short`, the current branch, and remotes in `$COMFY` and `$COMFYUI_DGX_SPARK_ROOT`. Read existing changes before touching either checkout. Do not silently include unrelated edits in an installer stash. If pre-existing uncommitted ComfyUI work cannot be separated safely, stop and explain what needs preserving.
-2. Set `COMFY_ROOT=${COMFY_ROOT:-$COMFY}`. Record each direct child Git repository under `$COMFY_ROOT/custom_nodes`. Do not recurse into models, caches, or non-Git directories.
-3. From `$COMFYUI_DGX_SPARK_ROOT`, run `install.sh` with exported `VENV` and `COMFY`. The installer is idempotent and applies Spark wheel fixes and version-aware patches; it does not create ComfyUI or install PyTorch.
-4. Inspect the resulting diff and untracked files. Confirm each change belongs to the installer before stashing. Save these installer changes, including untracked launcher/patch files, with a clearly named `git stash push --include-untracked` from `$COMFY`.
-5. Update the ComfyUI root checkout with `git pull --ff-only`. Then run `git pull --ff-only` separately in every recorded Git repository directly under `$COMFY_ROOT`. If a repository is not on a branch, has divergent history, or cannot fast-forward, stop and report it; do not reset, force, or discard work.
-6. Reapply the installer stash with `git stash pop`. Resolve conflicts by comparing the installer patch's intent with the refreshed upstream implementation. Keep upstream changes where a patch is obsolete, and preserve only still-needed Spark changes. Never choose one side wholesale without reviewing the conflict. Run `git status` and inspect the final diff.
+1. Confirm `$COMFY` and `$VENV` exist and are the intended ComfyUI checkout and Python environment. This skill does not create ComfyUI or the venv.
+2. Bootstrap the Spark helper checkout if needed. If `$COMFYUI_DGX_SPARK_ROOT` does not exist, clone `https://github.com/Triplany/comfyui-dgx-spark.git` there. If the path exists, confirm it is that Git repository, inspect its status, branch, and remote, and read any local changes. Pull with `git pull --ff-only` only when the worktree is clean and the current branch tracks the intended upstream. If it is dirty or divergent, preserve the changes and stop before updating it.
+3. Ensure the constraints source exists. If `$DGX_SPARK_STARTER_PACK_ROOT/constraints.txt` is missing, clone `https://github.com/Amate-Labs/dgx-spark-comfyui-starter-pack.git` into that path. If the checkout already exists, inspect its status and remote; update it with `git pull --ff-only` only when clean and tracking the expected repository. Never overwrite a pre-existing non-Git directory or dirty checkout.
+4. Inspect `git status --short`, the current branch, and remotes in `$COMFY`. Read existing changes before touching it. Do not silently include unrelated edits in an installer stash. If pre-existing uncommitted ComfyUI work cannot be separated safely, stop and explain what needs preserving.
+5. Set `COMFY_ROOT=${COMFY_ROOT:-$COMFY}`. Record each direct child Git repository under `$COMFY_ROOT/custom_nodes`. Do not recurse into models, caches, or non-Git directories.
+6. From `$COMFYUI_DGX_SPARK_ROOT`, run `install.sh` with exported `VENV` and `COMFY`. The installer is idempotent and applies Spark wheel fixes and version-aware patches; it does not create ComfyUI or install PyTorch.
+7. Inspect the resulting diff and untracked files. Confirm each change belongs to the installer before stashing. Save these installer changes, including untracked launcher/patch files, with a clearly named `git stash push --include-untracked` from `$COMFY`.
+8. Update the ComfyUI root checkout with `git pull --ff-only`. Then run `git pull --ff-only` separately in every recorded Git repository directly under `$COMFY_ROOT`. If a repository is not on a branch, has divergent history, or cannot fast-forward, stop and report it; do not reset, force, or discard work.
+9. Reapply the installer stash with `git stash pop`. Resolve conflicts by comparing the installer patch's intent with the refreshed upstream implementation. Keep upstream changes where a patch is obsolete, and preserve only still-needed Spark changes. Never choose one side wholesale without reviewing the conflict. Run `git status` and inspect the final diff.
 
 ## Install Python requirements
 
-Find every `*requirements*.txt` file under `$COMFY` and its `custom_nodes` tree (including `manager_requirements.txt` and node-specific variants). Exclude test-only requirements unless the user requests development/test dependencies. Review each file and its referenced package sources before installing. Use the configured venv's pip and the versioned constraints file for every install:
+Find every `*requirements*.txt` file under `$COMFY` and its `custom_nodes` tree (including `manager_requirements.txt` and node-specific variants). Exclude test-only requirements unless the user requests development/test dependencies. Review each file and its referenced package sources before installing. Use the configured venv's pip and `$DGX_SPARK_STARTER_PACK_ROOT/constraints.txt` for every install:
 
 ```sh
-"$VENV/bin/python" -m pip install -c /path/to/dgx-spark-comfyui-starter-pack/constraints.txt -r /path/to/requirements.txt
+"$VENV/bin/python" -m pip install -c "$DGX_SPARK_STARTER_PACK_ROOT/constraints.txt" -r /path/to/requirements.txt
 ```
 
 Install the root, manager, and each custom-node runtime requirements file. Keep the command in the foreground and inspect failures; do not bypass constraints or ignore an install error. The constraints file pins the Spark PyTorch stack and is the source of truth for this starter pack.
