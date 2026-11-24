@@ -57,7 +57,7 @@ The installer's commit ancestry check can label ComfyUI as legacy when its commi
 Launch ComfyUI in an attached terminal and wait for the server URL:
 
 ```sh
-"$COMFY/run_dgx_spark.sh"
+VENV="$VENV" COMFY="$COMFY" "$COMFY/run_dgx_spark.sh"
 ```
 
 After confirming startup, stop the process with Ctrl-C in that terminal and confirm it exits. Do not kill processes by name. Leave ComfyUI running only when the user asks.
