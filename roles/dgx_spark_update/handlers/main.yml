@@ -1,0 +1,5 @@
+---
+- name: Restart DGX Dashboard admin service after updates
+  ansible.builtin.systemd_service:
+    name: dgx-dashboard-admin.service
+    state: restarted

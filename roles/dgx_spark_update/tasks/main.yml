@@ -20,6 +20,7 @@
   register: dgx_spark_update_apt
   environment:
     NEEDRESTART_MODE: "{{ 'a' if dgx_spark_update_restart_services else 'l' }}"
+  notify: Restart DGX Dashboard admin service after updates
 
 - name: Install fwupd when firmware updates are enabled
   ansible.builtin.apt:
@@ -61,6 +62,7 @@
     argv: [fwupdmgr, update, --assume-yes]
   register: dgx_spark_update_firmware_apply
   changed_when: "'No upgrades' not in (dgx_spark_update_firmware_apply.stdout | default(''))"
+  notify: Restart DGX Dashboard admin service after updates
   when:
     - dgx_spark_update_firmware
     - "'No updates available' not in (dgx_spark_update_firmware_check.stdout | default('') ~ '\n' ~ dgx_spark_update_firmware_check.stderr | default(''))"
