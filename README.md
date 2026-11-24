@@ -28,7 +28,7 @@ python -m pip install -r requirements.txt
 If you run Ansible on the Spark, use the included localhost inventory:
 
 ```sh
-ansible-playbook -i inventory.localhost.ini playbooks/dgx-spark.yml --become
+ansible-playbook -i inventory.localhost.ini playbooks/dgx-spark.yml --become --ask-become-pass
 ```
 
 If you run Ansible from another machine, copy the sample inventory and replace its example address with the Spark's address:
@@ -41,7 +41,7 @@ spark ansible_host=SPARK_IP ansible_user=YOUR_USER
 ```sh
 cp inventory.ini.example inventory.ini
 # Edit inventory.ini with your Spark's address and SSH user.
-ansible-playbook -i inventory.ini playbooks/dgx-spark.yml --become
+ansible-playbook -i inventory.ini playbooks/dgx-spark.yml --become --ask-become-pass
 ```
 
 Include either role in another playbook to run it on its own. The update role can restart services or require a reboot. Set `dgx_spark_update_reboot: true` to let Ansible reboot after changes.
