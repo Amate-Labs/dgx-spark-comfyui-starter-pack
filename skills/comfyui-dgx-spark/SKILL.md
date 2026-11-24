@@ -10,6 +10,6 @@ metadata:
 
 # ComfyUI on DGX Spark
 
-For ComfyUI setup or refresh requests on a DGX Spark, follow [the workflow](references/workflow.md) for paths, repository updates, dependency installation, and verification.
+For ComfyUI setup or refresh requests on a DGX Spark, follow [the workflow](references/workflow.md). Read defaults from [defaults.toml](config/defaults.toml) and use [spark_comfy.py](scripts/spark_comfy.py) for inspection, safe support-repository updates, constrained requirements installs, and fresh-process AIMDO checks.
 
 The skill expects Ubuntu on DGX Spark, Python 3.12, git, network access, an existing ComfyUI checkout, and a Python virtual environment with Spark-compatible PyTorch. It clones the Spark helper kit and starter pack when their checkouts are missing.

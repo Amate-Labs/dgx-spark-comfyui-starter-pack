@@ -1,0 +1,12 @@
+[paths]
+venv = "~/.venv-comfy"
+comfy = "~/playground/ComfyUI"
+helper = "~/playground/comfyui-dgx-spark"
+starter_pack = "~/playground/dgx-spark-comfyui-starter-pack"
+
+[repositories]
+helper_url = "https://github.com/Triplany/comfyui-dgx-spark.git"
+starter_pack_url = "https://github.com/Amate-Labs/dgx-spark-comfyui-starter-pack.git"
+
+[verification]
+aimdo_module = "comfy_aimdo.control"
