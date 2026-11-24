@@ -23,12 +23,12 @@ Create the ComfyUI checkout and Python virtual environment before using this wor
 
 ## Refresh ComfyUI and custom nodes
 
-1. Inspect the `$COMFY` branch, remote, and `git status --short`. Read local changes before proceeding. Keep unrelated user changes out of the installer stash. If you cannot separate them safely, stop and explain what needs preserving.
+1. Inspect the `$COMFY` branch, remote, and `git status --short`. Read each tracked change and untracked file. Identify user changes, existing Spark patches, and files the installer may create. Preserve all pre-existing changes in a named stash with `git stash push --include-untracked`; do not include ignored files. Record the stash reference and verify its contents with `git stash show --stat --include-untracked`.
 2. Set `COMFY_ROOT=${COMFY_ROOT:-$COMFY}`. Record each direct child Git repository under `$COMFY_ROOT/custom_nodes`. Skip models, caches, and non-Git directories.
-3. From `$COMFYUI_DGX_SPARK_ROOT`, run `install.sh` with `VENV` and `COMFY` set. The script applies Spark wheel fixes and version-aware ComfyUI patches. It does not install ComfyUI or PyTorch.
-4. Inspect the resulting diff and untracked files. Confirm they came from the installer. From `$COMFY`, stash those changes, including untracked launcher or patch files, with a descriptive `git stash push --include-untracked` message.
+3. Confirm `$COMFY` is clean. From `$COMFYUI_DGX_SPARK_ROOT`, run `install.sh` with `VENV` and `COMFY` set. The script applies Spark wheel fixes and version-aware ComfyUI patches. It does not install ComfyUI or PyTorch.
+4. Inspect the resulting diff and untracked files. Confirm each change came from the installer. Stash those changes separately, including untracked launcher or patch files, with a descriptive `git stash push --include-untracked` message. Record and verify this stash reference.
 5. Run `git pull --ff-only` in `$COMFY`, then in each recorded custom node repository. Stop if a repository is detached, divergent, or cannot fast-forward. Do not reset or discard changes.
-6. Run `git stash pop` in `$COMFY`. Review each conflict against the refreshed upstream code. Keep upstream changes when a patch no longer applies; preserve Spark changes that remain necessary. Inspect `git status` and the final diff.
+6. Apply the installer stash in `$COMFY`, then apply the pre-existing changes stash. Review each conflict against the refreshed upstream code. Keep local changes that remain necessary, and remove Spark patches that upstream or the installer now provides. Keep both stashes until you verify the reconciled worktree and final diff; then remove only the stashes you applied successfully. If you cannot preserve or reconcile a change, stop and explain the specific file and conflict.
 
 ## Install Python requirements
 
