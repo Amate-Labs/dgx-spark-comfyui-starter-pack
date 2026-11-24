@@ -47,6 +47,13 @@ def run(
     return subprocess.run(args, cwd=cwd, text=True, capture_output=True, check=False)
 
 
+def environment(paths: dict[str, Path]) -> dict[str, str]:
+    values = os.environ.copy()
+    values["VENV"] = str(paths["venv"])
+    values["COMFY"] = str(paths["comfy"])
+    return values
+
+
 def github_repo(remote: str | None) -> str | None:
     """Return a normalized GitHub owner/repository for HTTPS or SSH URLs."""
     if not remote:
@@ -260,11 +267,22 @@ def launch(_: argparse.Namespace) -> int:
     if not launcher.is_file() or not os.access(launcher, os.X_OK):
         print(f"Missing executable ComfyUI launcher: {launcher}", file=sys.stderr)
         return 1
-    environment = os.environ.copy()
-    environment["VENV"] = str(paths["venv"])
-    environment["COMFY"] = str(paths["comfy"])
     return subprocess.run(
-        [str(launcher)], cwd=paths["comfy"], env=environment
+        [str(launcher)], cwd=paths["comfy"], env=environment(paths)
+    ).returncode
+
+
+def run_helper(args: argparse.Namespace) -> int:
+    _, paths = settings()
+    root = paths["helper"].resolve()
+    script = (root / args.script).resolve()
+    if root not in script.parents or script.suffix != ".sh" or not script.is_file():
+        print(f"Expected a shell script inside {root}: {args.script}", file=sys.stderr)
+        return 2
+    return subprocess.run(
+        ["bash", str(script), *args.script_args],
+        cwd=root,
+        env=environment(paths),
     ).returncode
 
 
@@ -296,6 +314,12 @@ def main() -> int:
     commands.add_parser(
         "launch", help="Run ComfyUI with configured VENV and COMFY paths"
     ).set_defaults(func=launch)
+    helper = commands.add_parser(
+        "helper-run", help="Run a helper-kit shell script with configured VENV and COMFY"
+    )
+    helper.add_argument("script", help="Script path relative to the helper-kit checkout")
+    helper.add_argument("script_args", nargs=argparse.REMAINDER)
+    helper.set_defaults(func=run_helper)
     args = parser.parse_args()
     return args.func(args)
 
