@@ -254,6 +254,20 @@ def aimdo(_: argparse.Namespace) -> int:
     return result.returncode
 
 
+def launch(_: argparse.Namespace) -> int:
+    _, paths = settings()
+    launcher = paths["comfy"] / "run_dgx_spark.sh"
+    if not launcher.is_file() or not os.access(launcher, os.X_OK):
+        print(f"Missing executable ComfyUI launcher: {launcher}", file=sys.stderr)
+        return 1
+    environment = os.environ.copy()
+    environment["VENV"] = str(paths["venv"])
+    environment["COMFY"] = str(paths["comfy"])
+    return subprocess.run(
+        [str(launcher)], cwd=paths["comfy"], env=environment
+    ).returncode
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -279,6 +293,9 @@ def main() -> int:
     commands.add_parser(
         "aimdo", help="Test AIMDO initialization in a fresh Python process"
     ).set_defaults(func=aimdo)
+    commands.add_parser(
+        "launch", help="Run ComfyUI with configured VENV and COMFY paths"
+    ).set_defaults(func=launch)
     args = parser.parse_args()
     return args.func(args)
 

@@ -54,10 +54,10 @@ Confirm the result against ComfyUI's startup log. Look for AIMDO initialized for
 
 The installer's commit ancestry check can label ComfyUI as legacy when its commit hashes do not appear in that checkout's history. Treat that label as a hint. Record the ComfyUI commit and version, then check startup for async offloading and DynamicVRAM. Report any mismatch between the installer label and runtime behavior.
 
-Launch ComfyUI in an attached terminal and wait for the server URL:
+Launch ComfyUI in an attached terminal with the configured `VENV` and `COMFY` paths:
 
 ```sh
-VENV="$VENV" COMFY="$COMFY" "$COMFY/run_dgx_spark.sh"
+python3 skills/comfyui-dgx-spark/scripts/spark_comfy.py launch
 ```
 
 After confirming startup, stop the process with Ctrl-C in that terminal and confirm it exits. Do not kill processes by name. Leave ComfyUI running only when the user asks.
