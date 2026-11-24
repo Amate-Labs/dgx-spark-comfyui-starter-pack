@@ -1,2 +1,7 @@
 inventory.ini
 *.retry
+.agents/
+
+# Dependency lock files, including skills-lock.json.
+*.lock*
+*-lock.*
