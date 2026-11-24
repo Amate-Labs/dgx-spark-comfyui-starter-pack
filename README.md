@@ -25,16 +25,22 @@ python -m pip install -r requirements.txt
 
 ## Run the playbook
 
-Create an inventory for your Spark:
+If you run Ansible on the Spark, use the included localhost inventory:
+
+```sh
+ansible-playbook -i inventory.localhost.ini playbooks/dgx-spark.yml --become
+```
+
+If you run Ansible from another machine, copy the sample inventory and replace its example address with the Spark's address:
 
 ```ini
 [dgx_spark]
-spark ansible_host=192.0.2.10 ansible_user=cristian
+spark ansible_host=SPARK_IP ansible_user=YOUR_USER
 ```
 
-Run both roles:
-
 ```sh
+cp inventory.ini.example inventory.ini
+# Edit inventory.ini with your Spark's address and SSH user.
 ansible-playbook -i inventory.ini playbooks/dgx-spark.yml --become
 ```
 
