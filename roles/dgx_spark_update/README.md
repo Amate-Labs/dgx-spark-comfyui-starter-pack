@@ -1,7 +1,5 @@
 # dgx_spark_update
 
-Updates configured APT sources with `ansible.builtin.apt`, installs and checks `fwupd`, and applies firmware updates offered by fwupd. Reboot is opt-in.
+This role upgrades APT packages, installs `fwupd`, and applies firmware updates offered by fwupd. Set `dgx_spark_update_reboot: true` to let Ansible reboot after changes.
 
-This does not promise to install NVIDIA DGX OS release bundles shown only in the local DGX updater (`http://localhost:11000/updates`). Review that interface for vendor platform updates that APT/fwupd do not expose.
-
-Defaults are in `defaults/main.yml`. Override `dgx_spark_update_reboot: true` to reboot after changes.
+Use the DGX updater at `http://localhost:11000/updates` for NVIDIA release bundles that APT or fwupd do not expose. Set role defaults in `defaults/main.yml` or override them in your playbook.

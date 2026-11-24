@@ -2,20 +2,20 @@
 
 [![skills.sh](https://skills.sh/b/Amate-Labs/dgx-spark-comfyui-starter-pack)](https://skills.sh/Amate-Labs/dgx-spark-comfyui-starter-pack)
 
-Ansible roles for a DGX Spark, plus an Agent Skill that guides a careful ComfyUI install and refresh.
+Two Ansible roles configure a DGX Spark. An Agent Skill guides ComfyUI setup and updates.
 
 ## Contents
 
-- `roles/nvidia_gpu_clock_limit`: apply `nvidia-smi -lgc 0,2200` once at boot with a systemd oneshot service.
-- `roles/dgx_spark_update`: update configured APT packages and available device firmware.
-- `skills/comfyui-dgx-spark`: Agent Skills compliant workflow for setting up/updating Spark ComfyUI.
-- `constraints.txt`: versioned pip constraints used by the ComfyUI skill (initially copied from the playground).
+- `roles/nvidia_gpu_clock_limit`: run `nvidia-smi -lgc 0,2200` once at boot through systemd.
+- `roles/dgx_spark_update`: upgrade APT packages and install firmware offered by fwupd.
+- `skills/comfyui-dgx-spark`: guide the ComfyUI install, repository refresh, and verification workflow.
+- `constraints.txt`: pin the Spark PyTorch stack for ComfyUI package installs.
 
-The firmware role reports pending upgrades and installs them with `fwupdmgr`. This covers firmware exposed through fwupd. The DGX OS web updater at `http://localhost:11000/updates` may deliver NVIDIA platform release bundles beyond APT/fwupd; use that UI when NVIDIA publishes a platform update that is not represented by those package sources.
+APT and fwupd can update the packages and firmware their sources expose. For NVIDIA DGX OS releases shown in the local updater at `http://localhost:11000/updates`, use that updater.
 
-## Ansible use
+## Install Ansible on the controller
 
-Requires Python 3.12+ and an Ubuntu DGX Spark reachable over SSH. The controller requirements install `ansible-core`; these roles use only `ansible.builtin` modules, so no additional Galaxy collections are needed. Set up an isolated controller environment:
+Use Python 3.12 or newer. The roles use `ansible.builtin` modules, so `ansible-core` supplies everything they need.
 
 ```sh
 python3 -m venv .venv
@@ -23,41 +23,43 @@ python3 -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-Example inventory:
+## Run the playbook
+
+Create an inventory for your Spark:
 
 ```ini
 [dgx_spark]
 spark ansible_host=192.0.2.10 ansible_user=cristian
 ```
 
-Apply both roles:
+Run both roles:
 
 ```sh
 ansible-playbook -i inventory.ini playbooks/dgx-spark.yml --become
 ```
 
-Use the roles independently by including them in another playbook. The update role's full-upgrade and firmware actions can restart services or require a reboot; rebooting is opt-in (`dgx_spark_update_reboot: true`).
+Include either role in another playbook to run it on its own. The update role can restart services or require a reboot. Set `dgx_spark_update_reboot: true` to let Ansible reboot after changes.
 
-## GPU clock logging
+## Check GPU clock logs
 
-The clock service runs once per boot and leaves its result in the system journal. To inspect it:
+The service runs once at boot. Read its output from the journal:
 
 ```sh
 systemctl status nvidia-gpu-clock-limit.service
 journalctl -b -u nvidia-gpu-clock-limit.service
 ```
 
-For a separate live cadence/temperature log, run your existing query when needed:
+For a live clock and temperature trace, run:
 
 ```sh
 nvidia-smi --query-gpu=clocks.current.graphics,temperature.gpu --format=csv -l 1
 ```
 
-## ComfyUI skill
+## Use the ComfyUI skill
 
-The skill defaults to `~/playground/comfyui-dgx-spark`, `~/playground/ComfyUI`, and `~/.venv-comfy`. Set `COMFYUI_DGX_SPARK_ROOT`, `COMFY`, or `VENV` to override. Run it with an Agent Skills compatible agent by installing `skills/comfyui-dgx-spark` as a skill.
+The skill expects an existing ComfyUI checkout and Python venv. It clones or updates the Spark helper kit and this starter pack as needed. Defaults: `~/playground/ComfyUI`, `~/.venv-comfy`, `~/playground/comfyui-dgx-spark`, and `~/playground/dgx-spark-comfyui-starter-pack`. Set `COMFY`, `VENV`, `COMFYUI_DGX_SPARK_ROOT`, or `DGX_SPARK_STARTER_PACK_ROOT` to use other paths.
 
-The skill is published in this repository at `skills/comfyui-dgx-spark` and can be installed with the [skills CLI](https://www.skills.sh/docs):
+Install the skill with the [skills CLI](https://www.skills.sh/docs):
 
 ```sh
 npx skills add Amate-Labs/dgx-spark-comfyui-starter-pack
