@@ -1,0 +1,13 @@
+[Unit]
+Description=Set NVIDIA GPU graphics clock limit for this boot
+After=systemd-modules-load.service nvidia-persistenced.service
+Wants=nvidia-persistenced.service
+
+[Service]
+Type=oneshot
+ExecStart={{ nvidia_gpu_clock_limit_nvidia_smi.stdout | trim }} -lgc {{ nvidia_gpu_clock_limit_min_mhz }},{{ nvidia_gpu_clock_limit_max_mhz }}
+RemainAfterExit=yes
+SyslogIdentifier=nvidia-gpu-clock-limit
+
+[Install]
+WantedBy=multi-user.target

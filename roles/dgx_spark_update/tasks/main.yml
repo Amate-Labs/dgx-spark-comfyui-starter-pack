@@ -1,0 +1,43 @@
+---
+- name: Refresh APT package metadata
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Upgrade installed APT packages
+  ansible.builtin.apt:
+    upgrade: "{{ dgx_spark_update_upgrade_type }}"
+    autoremove: "{{ dgx_spark_update_autoremove }}"
+    autoclean: true
+  register: dgx_spark_update_apt
+
+- name: Install fwupd when firmware updates are enabled
+  ansible.builtin.apt:
+    name: fwupd
+    state: present
+  when: dgx_spark_update_firmware
+
+- name: Check for firmware upgrades
+  ansible.builtin.command:
+    argv: [fwupdmgr, get-upgrades]
+  register: dgx_spark_update_firmware_check
+  changed_when: false
+  when: dgx_spark_update_firmware
+
+- name: Show firmware upgrade inventory
+  ansible.builtin.debug:
+    msg: "{{ dgx_spark_update_firmware_check.stdout | default('') }}{{ dgx_spark_update_firmware_check.stderr | default('') }}"
+  when: dgx_spark_update_firmware and (dgx_spark_update_firmware_check.stdout | default('') | length > 0 or dgx_spark_update_firmware_check.stderr | default('') | length > 0)
+
+- name: Install available device firmware updates
+  ansible.builtin.command:
+    argv: [fwupdmgr, update, --assume-yes]
+  register: dgx_spark_update_firmware_apply
+  changed_when: "'No upgrades' not in (dgx_spark_update_firmware_apply.stdout | default(''))"
+  when: dgx_spark_update_firmware
+
+- name: Reboot after updates when explicitly requested
+  ansible.builtin.reboot:
+    msg: Rebooting after DGX Spark package and firmware updates
+    reboot_timeout: 1800
+  when: dgx_spark_update_reboot and (dgx_spark_update_apt.changed or (dgx_spark_update_firmware and dgx_spark_update_firmware_apply.changed))

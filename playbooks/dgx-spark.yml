@@ -1,0 +1,7 @@
+---
+- name: Prepare NVIDIA DGX Spark for ComfyUI
+  hosts: dgx_spark
+  become: true
+  roles:
+    - nvidia_gpu_clock_limit
+    - dgx_spark_update

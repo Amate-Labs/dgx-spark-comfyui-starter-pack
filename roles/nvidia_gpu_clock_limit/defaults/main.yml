@@ -1,0 +1,4 @@
+---
+nvidia_gpu_clock_limit_min_mhz: 0
+nvidia_gpu_clock_limit_max_mhz: 2200
+nvidia_gpu_clock_limit_unit_name: nvidia-gpu-clock-limit.service

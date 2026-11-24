@@ -1,0 +1,5 @@
+---
+dgx_spark_update_upgrade_type: full
+dgx_spark_update_autoremove: true
+dgx_spark_update_firmware: true
+dgx_spark_update_reboot: false
