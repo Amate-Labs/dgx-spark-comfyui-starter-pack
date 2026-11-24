@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +38,29 @@ def settings() -> tuple[dict, dict]:
 
 def run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, cwd=cwd, text=True, capture_output=True, check=False)
+
+
+def github_repo(remote: str | None) -> str | None:
+    """Return a normalized GitHub owner/repository for HTTPS or SSH URLs."""
+    if not remote:
+        return None
+    match = re.fullmatch(r"git@github\.com:([^/]+)/([^/]+?)(?:\.git)?/?", remote, re.I)
+    if match:
+        owner, repo = match.groups()
+    else:
+        parsed = urlparse(remote)
+        if parsed.hostname and parsed.hostname.lower() == "github.com" and parsed.scheme in {"https", "http", "ssh", "git"}:
+            parts = parsed.path.strip("/").split("/")
+            if len(parts) != 2:
+                return None
+            owner, repo = parts
+            if repo.endswith(".git"):
+                repo = repo[:-4]
+        else:
+            return None
+    if not owner or not repo:
+        return None
+    return f"{owner}/{repo}".casefold()
 
 
 def git_info(path: Path) -> dict:
@@ -119,8 +143,8 @@ def sync_support(args: argparse.Namespace) -> int:
             print(f"STOP {path}: not the expected Git checkout")
             failed = True
             continue
-        if info.get("origin") != expected:
-            print(f"STOP {path}: origin is {info.get('origin')!r}, expected {expected!r}")
+        if github_repo(info.get("origin")) != github_repo(expected):
+            print(f"STOP {path}: origin is {info.get('origin')!r}, expected repository {expected!r}")
             failed = True
             continue
         if not info.get("branch") or info.get("upstream") != f"origin/{info['branch']}":

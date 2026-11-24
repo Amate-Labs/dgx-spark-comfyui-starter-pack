@@ -16,7 +16,7 @@ Create the ComfyUI checkout and Python virtual environment before using this wor
 
 ## Get the helper kit and constraints
 
-Run `python3 skills/comfyui-dgx-spark/scripts/spark_comfy.py sync-support` to preview the helper-kit and starter-pack operations. Inspect the paths and origins, then add `--apply` to clone missing checkouts or fast-forward clean checkouts. The script stops on a dirty checkout, unexpected origin, or non-Git path. Do not resolve these stops by discarding work.
+Run `python3 skills/comfyui-dgx-spark/scripts/spark_comfy.py sync-support` to preview the helper-kit and starter-pack operations. Inspect the paths and origins, then add `--apply` to clone missing checkouts or fast-forward clean checkouts. The script accepts SSH and HTTPS URLs for the same GitHub repository. It stops on a different repository, a dirty checkout, or a non-Git path. Do not resolve these stops by discarding work.
 
 ## Refresh ComfyUI and custom nodes
 
