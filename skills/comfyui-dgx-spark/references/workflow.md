@@ -51,13 +51,31 @@ cd "$COMFYUI_DGX_SPARK_ROOT"
 VENV="$VENV" COMFY="$COMFY" bash ./verify.sh
 ```
 
-Investigate failed checks. In particular, `aimdo init(0) failed: FAIL` is a verifier failure, not a harmless log line by itself. Check the device, torch/CUDA setup, imports, and whether ComfyUI reports comfy-aimdo initialized with DynamicVRAM enabled. Dismiss it only when those checks show that the failure does not affect the running ComfyUI setup; record the evidence.
+Investigate failed checks. Some verifier versions call `comfy_aimdo.control.init()` and then call the underlying `c.lib.init(0)` in the same Python process. The second call can return false because AIMDO has already initialized. Check the verifier code before treating that result as an initialization failure.
 
-Launch ComfyUI and watch until it prints the server URL:
+Test AIMDO in a fresh Python process. Initialize CUDA, allocate a tensor, then call the wrapper once:
+
+```sh
+"$VENV/bin/python" - <<'PY'
+import torch
+torch.cuda.init()
+_ = torch.zeros(1, device="cuda")
+import comfy_aimdo.control as control
+print("AIMDO initialized:", control.init())
+PY
+```
+
+Confirm the result against ComfyUI's startup log. Look for AIMDO initialized for the NVIDIA GB10 and DynamicVRAM enabled. Investigate if either check fails.
+
+The installer's commit ancestry check can label ComfyUI as legacy when its commit hashes do not appear in that checkout's history. Treat that label as a hint. Record the ComfyUI commit and version, then check startup for async offloading and DynamicVRAM. Report any mismatch between the installer label and runtime behavior.
+
+Launch ComfyUI in an attached terminal and wait for the server URL:
 
 ```sh
 "$COMFY/run_dgx_spark.sh"
 ```
+
+After confirming startup, stop the process with Ctrl-C in that terminal and confirm it exits. Do not kill processes by name. Leave ComfyUI running only when the user asks.
 
 These reports can be harmless when ComfyUI reaches its URL and stays running:
 
